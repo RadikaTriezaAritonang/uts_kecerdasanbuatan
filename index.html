@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Analisis Kelayakan Pinjaman</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; padding: 50px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .btn-primary { border-radius: 10px; padding: 12px; font-weight: bold; background: linear-gradient(45deg, #007bff, #0056b3); border: none; transition: 0.3s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,123,255,0.3); }
+        
+        #resultArea { 
+            display: none; 
+            margin-top: 25px; 
+            border-radius: 15px; 
+            padding: 25px; 
+            text-align: center; 
+            color: white; 
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-label { font-weight: 600; color: #444; }
+        .is-invalid { border-color: #dc3545 !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4">
+                <h3 class="text-center mb-2">Analisis Kelayakan Pinjaman Kredit</h3>
+                <hr>
+                
+                <form id="creditForm" class="needs-validation" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label">Pekerjaan Nasabah</label>
+                        <select id="pekerjaan" class="form-select" required>
+                            <option value="" selected disabled>Pilih Pekerjaan</option>
+                            <option value="5">Karyawan Tetap / PNS</option>
+                            <option value="4">Pengusaha</option>
+                            <option value="3">Karyawan Kontrak</option>
+                            <option value="2">Freelance / Driver Online</option>
+                            <option value="1">Pekerja Tidak Tetap</option>
+                            <option value="0">Tidak Bekerja</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Penghasilan Per Bulan (Rp)</label>
+                        <input type="number" id="penghasilan" class="form-control" placeholder="Masukan angka (Misal: 5000000)" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tagihan Listrik & Air (Rp)</label>
+                        <input type="number" id="pengeluaran" class="form-control" placeholder="Masukan angka (Misal: 300000)" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Aset Jaminan</label>
+                        <select id="jaminan" class="form-select" required>
+                            <option value="" selected disabled>Pilih Jaminan</option>
+                            <option value="5">Tanah > 1 Hektar / Properti Mewah</option>
+                            <option value="3">Mobil / Tanah < 1 Hektar</option>
+                            <option value="1">Motor / Barang Elektronik</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Jumlah Tanggungan (Orang)</label>
+                        <input type="number" id="beban" class="form-control" placeholder="0" required>
+                    </div>
+
+                    <button type="button" id="btnProses" onclick="prosesKredit()" class="btn btn-primary w-100">MULAI ANALISIS</button>
+                </form>
+
+                <div id="resultArea">
+                    <h5 id="labelHasil" class="small text-uppercase">Hasil Analisis Skor</h5>
+                    <h2 id="kategoriHasil" class="fw-bold">---</h2>
+                    <p id="skorHasil" class="mb-0">Skor: 0 / 25</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function prosesKredit() {
+    const form = document.getElementById('creditForm');
+    
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        alert("Mohon lengkapi semua data sebelum memproses!");
+        return;
+    }
+
+    const s1 = parseInt(document.getElementById('pekerjaan').value);
+    const penghasilan = parseFloat(document.getElementById('penghasilan').value) || 0;
+    const pengeluaran = parseFloat(document.getElementById('pengeluaran').value) || 0;
+    const s4 = parseInt(document.getElementById('jaminan').value);
+    const bebanCount = parseInt(document.getElementById('beban').value) || 0;
+
+    let s2 = 1;
+    if (penghasilan >= 10000000) s2 = 5;
+    else if (penghasilan >= 5000000) s2 = 3;
+
+    const rasio = penghasilan > 0 ? (pengeluaran / penghasilan) : 1; 
+    let s3 = 1;
+    if (rasio <= 0.1) s3 = 5;
+    else if (rasio <= 0.3) s3 = 3;
+
+    let s5 = 1;
+    if (bebanCount <= 1) s5 = 5;
+    else if (bebanCount <= 3) s5 = 3;
+
+    const totalSkor = s1 + s2 + s3 + s4 + s5;
+    
+    let kategori = "";
+    let color = "";
+
+    if (totalSkor >= 21) {
+        kategori = "SANGAT LAYAK";
+        color = "#198754";
+    } else if (totalSkor >= 13) {
+        kategori = "LAYAK";
+        color = "#0dcaf0";
+    } else {
+        kategori = "TIDAK LAYAK";
+        color = "#dc3545";
+    }
+
+    const resultBox = document.getElementById('resultArea');
+    resultBox.style.display = "block";
+    resultBox.style.backgroundColor = color;
+    
+    document.getElementById('kategoriHasil').innerText = kategori;
+    document.getElementById('skorHasil').innerText = "Total Skor: " + totalSkor + " / 25";
+
+    resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+
+</body>
+</html>
